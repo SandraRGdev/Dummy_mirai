@@ -1,6 +1,14 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import { createCanvas } from "canvas";
+import { createCanvas, registerFont } from "canvas";
+import path from "path";
+
+// Register fonts
+try {
+  registerFont(path.resolve('./fonts/Roboto-Bold.ttf'), { family: 'Roboto', weight: 'bold' });
+} catch (e) {
+  console.warn("Could not register font:", e);
+}
 
 async function startServer() {
   const app = express();
@@ -55,19 +63,18 @@ async function startServer() {
       ctx.fillStyle = safeColor;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      
+      ctx.font = `bold ${fontSize}px Roboto`;
+
       if (customText) {
         // Draw dimensions
-        ctx.font = `bold ${fontSize}px sans-serif`;
         ctx.fillText(dimText, width / 2, height / 2 - fontSize * 0.6);
-        
+
         // Draw custom text below
         const customFontSize = fontSize * 0.6;
-        ctx.font = `normal ${customFontSize}px sans-serif`;
+        ctx.font = `normal ${customFontSize}px Roboto`;
         ctx.fillText(customText, width / 2, height / 2 + fontSize * 0.6);
       } else {
         // Draw only dimensions
-        ctx.font = `bold ${fontSize}px sans-serif`;
         ctx.fillText(dimText, width / 2, height / 2);
       }
 
@@ -75,10 +82,10 @@ async function startServer() {
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
       res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-      
+
       res.setHeader("Content-Type", "image/png");
       res.setHeader("Cache-Control", "public, max-age=31536000"); // Cache for 1 year
-      
+
       // Send PNG stream
       const stream = canvas.createPNGStream();
       stream.pipe(res);

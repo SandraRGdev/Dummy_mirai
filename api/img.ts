@@ -1,4 +1,12 @@
-import { createCanvas } from 'canvas';
+import { createCanvas, registerFont } from 'canvas';
+import path from 'path';
+
+// Register fonts for Vercel environment
+try {
+  registerFont(path.resolve('./fonts/Roboto-Bold.ttf'), { family: 'Roboto', weight: 'bold' });
+} catch (e) {
+  console.warn("Could not register font:", e);
+}
 
 export default async function handler(req: any, res: any) {
   let width = 800;
@@ -46,19 +54,18 @@ export default async function handler(req: any, res: any) {
     ctx.fillStyle = safeColor;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    
+    ctx.font = `bold ${fontSize}px Roboto`;
+
     if (customText) {
       // Draw dimensions
-      ctx.font = `bold ${fontSize}px sans-serif`;
       ctx.fillText(dimText, width / 2, height / 2 - fontSize * 0.6);
-      
+
       // Draw custom text below
       const customFontSize = fontSize * 0.6;
-      ctx.font = `normal ${customFontSize}px sans-serif`;
+      ctx.font = `normal ${customFontSize}px Roboto`;
       ctx.fillText(customText, width / 2, height / 2 + fontSize * 0.6);
     } else {
       // Draw only dimensions
-      ctx.font = `bold ${fontSize}px sans-serif`;
       ctx.fillText(dimText, width / 2, height / 2);
     }
 
@@ -66,10 +73,10 @@ export default async function handler(req: any, res: any) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-    
+
     res.setHeader("Content-Type", "image/png");
     res.setHeader("Cache-Control", "public, max-age=31536000"); // Cache for 1 year
-    
+
     // Send PNG buffer
     const buffer = canvas.toBuffer('image/png');
     res.status(200).send(buffer);
