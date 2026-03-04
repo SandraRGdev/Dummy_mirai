@@ -1,4 +1,9 @@
 {
+    "functions": {
+        "api/img.ts": {
+            "includeFiles": "fonts/**"
+        }
+    },
     "rewrites": [
         {
             "source": "/api/img/:dimensions",

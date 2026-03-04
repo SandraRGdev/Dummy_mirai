@@ -5,13 +5,15 @@ import path from "path";
 import fs from "fs";
 
 // Register fonts
-const fontPath = path.join(process.cwd(), 'api', '_fonts', 'Roboto-Bold.ttf');
+const fontPath = path.join(process.cwd(), 'fonts', 'Roboto-Bold.ttf');
 if (fs.existsSync(fontPath)) {
   try {
     registerFont(fontPath, { family: 'Roboto', weight: 'bold' });
   } catch (e) {
     console.warn("Could not register font:", e);
   }
+} else {
+  console.warn("Local font file NOT found at:", fontPath);
 }
 
 async function startServer() {
@@ -39,7 +41,6 @@ async function startServer() {
       height = parseInt(req.query.h as string) || 600;
     }
 
-    // Limit maximum dimensions to prevent memory issues
     width = Math.min(Math.max(1, width), 4000);
     height = Math.min(Math.max(1, height), 4000);
 
@@ -48,49 +49,40 @@ async function startServer() {
     const customText = req.query.text as string;
     const dimText = `${width}x${height}`;
 
-    // Validate hex colors
     const isValidHex = (hex: string) => /^[0-9A-Fa-f]{3,6}$/.test(hex);
     const safeBg = isValidHex(bg) ? `#${bg}` : "#cccccc";
     const safeColor = isValidHex(color) ? `#${color}` : "#666666";
 
     try {
-      // Create canvas
       const canvas = createCanvas(width, height);
       const ctx = canvas.getContext('2d');
 
-      // Fill background
       ctx.fillStyle = safeBg;
       ctx.fillRect(0, 0, width, height);
 
-      // Draw text
       const fontSize = Math.min(width / 10, height / 5, 100);
       ctx.fillStyle = safeColor;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.font = `bold ${fontSize}px Roboto`;
+
+      ctx.font = `bold ${fontSize}px Roboto, sans-serif`;
 
       if (customText) {
-        // Draw dimensions
         ctx.fillText(dimText, width / 2, height / 2 - fontSize * 0.6);
-
-        // Draw custom text below
         const customFontSize = fontSize * 0.6;
-        ctx.font = `normal ${customFontSize}px Roboto`;
+        ctx.font = `normal ${customFontSize}px Roboto, sans-serif`;
         ctx.fillText(customText, width / 2, height / 2 + fontSize * 0.6);
       } else {
-        // Draw only dimensions
         ctx.fillText(dimText, width / 2, height / 2);
       }
 
-      // Add CORS headers so external sites (like WordPress) can load the image
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
       res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
       res.setHeader("Content-Type", "image/png");
-      res.setHeader("Cache-Control", "public, max-age=31536000"); // Cache for 1 year
+      res.setHeader("Cache-Control", "public, max-age=31536000");
 
-      // Send PNG stream
       const stream = canvas.createPNGStream();
       stream.pipe(res);
     } catch (error) {
@@ -99,7 +91,6 @@ async function startServer() {
     }
   });
 
-  // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -107,7 +98,6 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    // In production, serve static files
     app.use(express.static("dist"));
   }
 
