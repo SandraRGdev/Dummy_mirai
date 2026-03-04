@@ -1,0 +1,5 @@
+{
+  "name": "DummyImg Gen",
+  "description": "A tool to generate dummy placeholder images with custom dimensions, colors, and text.",
+  "requestFramePermissions": []
+}
