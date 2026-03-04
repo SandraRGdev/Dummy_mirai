@@ -1,18 +1,5 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
-import path from "path";
-import fs from "fs";
-
-// Register fonts
-const fontPath = path.join(process.cwd(), 'fonts', 'Roboto-Bold.ttf');
-if (fs.existsSync(fontPath)) {
-  try {
-    GlobalFonts.registerFromPath(fontPath, 'Roboto');
-  } catch (e) {
-    console.warn("Could not register font:", e);
-  }
-}
 
 async function startServer() {
   const app = express();
@@ -28,7 +15,8 @@ async function startServer() {
       let height = 600;
 
       if (req.params.dimensions) {
-        const dimMatch = req.params.dimensions.match(/^(\d+)x(\d+)(?:\.[a-zA-Z]+)?$/);
+        const rawDim = req.params.dimensions.split('.')[0];
+        const dimMatch = rawDim.match(/^(\d+)x(\d+)$/);
         if (dimMatch) {
           width = parseInt(dimMatch[1], 10);
           height = parseInt(dimMatch[2], 10);
@@ -38,9 +26,6 @@ async function startServer() {
         height = parseInt(req.query.h as string) || 600;
       }
 
-      width = Math.min(Math.max(1, width), 4000);
-      height = Math.min(Math.max(1, height), 4000);
-
       const bg = (req.query.bg as string) || "cccccc";
       const color = (req.query.color as string) || "666666";
       const customText = req.query.text as string;
@@ -49,33 +34,43 @@ async function startServer() {
       const isValidHex = (hex: string) => /^[0-9A-Fa-f]{3,6}$/.test(hex);
       const safeBg = isValidHex(bg) ? `#${bg}` : "#cccccc";
       const safeColor = isValidHex(color) ? `#${color}` : "#666666";
-
-      const canvas = createCanvas(width, height);
-      const ctx = canvas.getContext('2d');
-
-      ctx.fillStyle = safeBg;
-      ctx.fillRect(0, 0, width, height);
-
       const fontSize = Math.min(width / 10, height / 5, 100);
-      ctx.fillStyle = safeColor;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
 
-      ctx.font = `bold ${fontSize}px Roboto`;
+      const svg = `
+<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="${safeBg}" />
+  <text 
+    x="50%" 
+    y="${customText ? '45%' : '50%'}" 
+    dominant-baseline="middle" 
+    text-anchor="middle" 
+    font-family="sans-serif" 
+    font-weight="bold" 
+    font-size="${fontSize}" 
+    fill="${safeColor}"
+  >
+    ${dimText}
+  </text>
+  ${customText ? `
+  <text 
+    x="50%" 
+    y="${customText ? '60%' : '50%'}" 
+    dy="${fontSize * 0.4}"
+    dominant-baseline="middle" 
+    text-anchor="middle" 
+    font-family="sans-serif" 
+    font-weight="normal" 
+    font-size="${fontSize * 0.6}" 
+    fill="${safeColor}"
+  >
+    ${customText}
+  </text>
+  ` : ''}
+</svg>`.trim();
 
-      if (customText) {
-        ctx.fillText(dimText, width / 2, height / 2 - fontSize * 0.6);
-        const customFontSize = fontSize * 0.6;
-        ctx.font = `normal ${customFontSize}px Roboto`;
-        ctx.fillText(customText, width / 2, height / 2 + fontSize * 0.6);
-      } else {
-        ctx.fillText(dimText, width / 2, height / 2);
-      }
-
-      res.setHeader("Content-Type", "image/png");
+      res.setHeader("Content-Type", "image/svg+xml");
       res.setHeader("Cache-Control", "public, max-age=31536000");
-
-      res.send(canvas.toBuffer('image/png'));
+      res.status(200).send(svg);
     } catch (error) {
       console.error("Error generating image:", error);
       res.status(500).send("Error generating image");
