@@ -1,6 +1,6 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import { createCanvas, registerFont } from "canvas";
+import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
 import path from "path";
 import fs from "fs";
 
@@ -8,52 +8,48 @@ import fs from "fs";
 const fontPath = path.join(process.cwd(), 'fonts', 'Roboto-Bold.ttf');
 if (fs.existsSync(fontPath)) {
   try {
-    registerFont(fontPath, { family: 'Roboto', weight: 'bold' });
+    GlobalFonts.registerFromPath(fontPath, 'Roboto');
   } catch (e) {
     console.warn("Could not register font:", e);
   }
-} else {
-  console.warn("Local font file NOT found at:", fontPath);
 }
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // API routes FIRST
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
   });
 
-  // Image generation route
   app.get(["/api/img", "/api/img/:dimensions"], (req, res) => {
-    let width = 800;
-    let height = 600;
-
-    if (req.params.dimensions) {
-      const dimMatch = req.params.dimensions.match(/^(\d+)x(\d+)(?:\.[a-zA-Z]+)?$/);
-      if (dimMatch) {
-        width = parseInt(dimMatch[1], 10);
-        height = parseInt(dimMatch[2], 10);
-      }
-    } else {
-      width = parseInt(req.query.w as string) || 800;
-      height = parseInt(req.query.h as string) || 600;
-    }
-
-    width = Math.min(Math.max(1, width), 4000);
-    height = Math.min(Math.max(1, height), 4000);
-
-    const bg = (req.query.bg as string) || "cccccc";
-    const color = (req.query.color as string) || "666666";
-    const customText = req.query.text as string;
-    const dimText = `${width}x${height}`;
-
-    const isValidHex = (hex: string) => /^[0-9A-Fa-f]{3,6}$/.test(hex);
-    const safeBg = isValidHex(bg) ? `#${bg}` : "#cccccc";
-    const safeColor = isValidHex(color) ? `#${color}` : "#666666";
-
     try {
+      let width = 800;
+      let height = 600;
+
+      if (req.params.dimensions) {
+        const dimMatch = req.params.dimensions.match(/^(\d+)x(\d+)(?:\.[a-zA-Z]+)?$/);
+        if (dimMatch) {
+          width = parseInt(dimMatch[1], 10);
+          height = parseInt(dimMatch[2], 10);
+        }
+      } else {
+        width = parseInt(req.query.w as string) || 800;
+        height = parseInt(req.query.h as string) || 600;
+      }
+
+      width = Math.min(Math.max(1, width), 4000);
+      height = Math.min(Math.max(1, height), 4000);
+
+      const bg = (req.query.bg as string) || "cccccc";
+      const color = (req.query.color as string) || "666666";
+      const customText = req.query.text as string;
+      const dimText = `${width}x${height}`;
+
+      const isValidHex = (hex: string) => /^[0-9A-Fa-f]{3,6}$/.test(hex);
+      const safeBg = isValidHex(bg) ? `#${bg}` : "#cccccc";
+      const safeColor = isValidHex(color) ? `#${color}` : "#666666";
+
       const canvas = createCanvas(width, height);
       const ctx = canvas.getContext('2d');
 
@@ -65,26 +61,21 @@ async function startServer() {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      ctx.font = `bold ${fontSize}px Roboto, sans-serif`;
+      ctx.font = `bold ${fontSize}px Roboto`;
 
       if (customText) {
         ctx.fillText(dimText, width / 2, height / 2 - fontSize * 0.6);
         const customFontSize = fontSize * 0.6;
-        ctx.font = `normal ${customFontSize}px Roboto, sans-serif`;
+        ctx.font = `normal ${customFontSize}px Roboto`;
         ctx.fillText(customText, width / 2, height / 2 + fontSize * 0.6);
       } else {
         ctx.fillText(dimText, width / 2, height / 2);
       }
 
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
       res.setHeader("Content-Type", "image/png");
       res.setHeader("Cache-Control", "public, max-age=31536000");
 
-      const stream = canvas.createPNGStream();
-      stream.pipe(res);
+      res.send(canvas.toBuffer('image/png'));
     } catch (error) {
       console.error("Error generating image:", error);
       res.status(500).send("Error generating image");
