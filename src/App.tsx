@@ -63,7 +63,7 @@ export default function App() {
   if (text) params.append('text', text);
 
   const queryString = params.toString() ? `?${params.toString()}` : '';
-  const imageUrl = `${baseUrl}/api/img/${width}x${height}.png${queryString}`;
+  const imageUrl = `${baseUrl}/api/img/${width}x${height}.svg${queryString}`;
 
   const handleCopy = async () => {
     try {
@@ -94,7 +94,7 @@ export default function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
+
           {/* Controls Sidebar */}
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
@@ -132,7 +132,7 @@ export default function App() {
               <div className="space-y-3 mb-8">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-medium text-zinc-900">Presets</h3>
-                  <button 
+                  <button
                     onClick={() => setIsAddingPreset(!isAddingPreset)}
                     className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
                   >
@@ -142,37 +142,37 @@ export default function App() {
 
                 {isAddingPreset && (
                   <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-lg space-y-3 mb-3">
-                    <input 
-                      type="text" 
-                      placeholder="Preset Name" 
+                    <input
+                      type="text"
+                      placeholder="Preset Name"
                       value={newPreset.name}
-                      onChange={e => setNewPreset({...newPreset, name: e.target.value})}
+                      onChange={e => setNewPreset({ ...newPreset, name: e.target.value })}
                       className="w-full px-2 py-1.5 text-sm border border-zinc-200 rounded-md outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                     />
                     <div className="grid grid-cols-2 gap-2">
-                      <input 
-                        type="number" 
-                        placeholder="Width" 
+                      <input
+                        type="number"
+                        placeholder="Width"
                         value={newPreset.width}
-                        onChange={e => setNewPreset({...newPreset, width: parseInt(e.target.value) || 1})}
+                        onChange={e => setNewPreset({ ...newPreset, width: parseInt(e.target.value) || 1 })}
                         className="w-full px-2 py-1.5 text-sm border border-zinc-200 rounded-md outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                       />
-                      <input 
-                        type="number" 
-                        placeholder="Height" 
+                      <input
+                        type="number"
+                        placeholder="Height"
                         value={newPreset.height}
-                        onChange={e => setNewPreset({...newPreset, height: parseInt(e.target.value) || 1})}
+                        onChange={e => setNewPreset({ ...newPreset, height: parseInt(e.target.value) || 1 })}
                         className="w-full px-2 py-1.5 text-sm border border-zinc-200 rounded-md outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                       />
                     </div>
                     <div className="flex gap-2 pt-1">
-                      <button 
+                      <button
                         onClick={handleAddPreset}
                         className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs py-1.5 rounded-md font-medium transition-colors"
                       >
                         Save
                       </button>
-                      <button 
+                      <button
                         onClick={() => setIsAddingPreset(false)}
                         className="flex-1 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 text-xs py-1.5 rounded-md font-medium transition-colors"
                       >
@@ -198,7 +198,7 @@ export default function App() {
                           <div className="text-xs text-zinc-500">{preset.width}x{preset.height}</div>
                         </div>
                       </button>
-                      <button 
+                      <button
                         onClick={(e) => handleDeletePreset(preset.id, e)}
                         className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity rounded"
                         title="Delete preset"
@@ -276,7 +276,7 @@ export default function App() {
 
           {/* Preview Area */}
           <div className="lg:col-span-8 flex flex-col gap-6">
-            
+
             {/* URL Output */}
             <div className="bg-white p-4 rounded-2xl shadow-sm border border-zinc-200 flex flex-col gap-4">
               <div className="flex items-center gap-4">
@@ -294,7 +294,7 @@ export default function App() {
                   {copied ? 'Copied!' : 'Copy URL'}
                 </button>
               </div>
-              
+
               {baseUrl.includes('run.app') && (
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
                   <strong className="font-semibold">Nota importante:</strong> Estás en un entorno de desarrollo privado. Esta URL está protegida por tu cuenta de Google, por lo que <strong>WordPress/Elementor no podrá verla</strong> directamente. Para usarla en tus webs, deberás alojar esta aplicación en un servidor público (como Vercel, Render o un VPS).
@@ -310,13 +310,13 @@ export default function App() {
                   {width} &times; {height}
                 </div>
               </div>
-              
+
               <div className="flex-1 bg-zinc-100 rounded-xl border border-zinc-200 overflow-hidden flex items-center justify-center relative p-4 checkerboard-bg">
                 {/* We use an img tag to actually test the generated URL */}
                 <div className="max-w-full max-h-full flex items-center justify-center overflow-hidden shadow-sm rounded">
-                  <img 
-                    src={imageUrl} 
-                    alt="Dummy placeholder preview" 
+                  <img
+                    src={imageUrl}
+                    alt="Dummy placeholder preview"
                     className="max-w-full max-h-full object-contain"
                     style={{
                       // This ensures the image scales down to fit the preview area,
@@ -333,7 +333,7 @@ export default function App() {
           </div>
         </div>
       </main>
-      
+
       {/* Add a tiny bit of custom CSS for the checkerboard background */}
       <style>{`
         .checkerboard-bg {
