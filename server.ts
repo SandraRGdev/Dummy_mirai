@@ -2,12 +2,16 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import { createCanvas, registerFont } from "canvas";
 import path from "path";
+import fs from "fs";
 
 // Register fonts
-try {
-  registerFont(path.resolve('./fonts/Roboto-Bold.ttf'), { family: 'Roboto', weight: 'bold' });
-} catch (e) {
-  console.warn("Could not register font:", e);
+const fontPath = path.join(process.cwd(), 'api', '_fonts', 'Roboto-Bold.ttf');
+if (fs.existsSync(fontPath)) {
+  try {
+    registerFont(fontPath, { family: 'Roboto', weight: 'bold' });
+  } catch (e) {
+    console.warn("Could not register font:", e);
+  }
 }
 
 async function startServer() {

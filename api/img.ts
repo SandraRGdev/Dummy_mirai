@@ -1,11 +1,23 @@
 import { createCanvas, registerFont } from 'canvas';
 import path from 'path';
+import fs from 'fs';
 
 // Register fonts for Vercel environment
-try {
-  registerFont(path.resolve('./fonts/Roboto-Bold.ttf'), { family: 'Roboto', weight: 'bold' });
-} catch (e) {
-  console.warn("Could not register font:", e);
+const fontPath = path.join(process.cwd(), 'api', '_fonts', 'Roboto-Bold.ttf');
+
+if (fs.existsSync(fontPath)) {
+  try {
+    registerFont(fontPath, { family: 'Roboto', weight: 'bold' });
+  } catch (e) {
+    console.error("Error registering font:", e);
+  }
+} else {
+  console.warn("Font file NOT found at:", fontPath);
+  // Try fallback for local development if needed
+  const localFontPath = path.resolve('./api/_fonts/Roboto-Bold.ttf');
+  if (fs.existsSync(localFontPath)) {
+    registerFont(localFontPath, { family: 'Roboto', weight: 'bold' });
+  }
 }
 
 export default async function handler(req: any, res: any) {
